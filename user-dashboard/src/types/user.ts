@@ -7,6 +7,6 @@ export interface User{
     image: string
 }
 
-export interface UseResponse{
+export interface UserResponse{
     users : User[]
 }
