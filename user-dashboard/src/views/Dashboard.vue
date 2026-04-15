@@ -7,19 +7,24 @@ import UserModel from '@/components/UserModel.vue';
 
 const search = ref("")
 const users = ref<User[]>([])
-console.log(users)
+const selectedUser = ref<User | null>(null)
+const isModalOpen = computed(() => !!selectedUser.value)
 
 onMounted(async () => {
-    const data = await fetchUsers()
-    users.value = data.users
-})
+    try{
+        const data = await fetchUsers()
+        users.value = data.users;
+    }catch(error){
+        console.error("Logic Error: Failed to load directory", error)
+    } 
+});
 
 const filterdUsers = computed(() => {
   return users.value.filter(u => 
   u.firstName.toLowerCase().includes(search.value.toLowerCase()))
 })
 
-const selectedUser = ref<User | null>(null)
+
 </script>
 
 <template>
