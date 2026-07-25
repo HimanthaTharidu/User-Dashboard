@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const emit = defineEmits(['toggle'])
+const emit = defineEmits(['toggle', 'logout'])
 const isCollapsed = ref(false)
+
 
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value
   emit('toggle', isCollapsed.value)
 }
+
+const triggerLogout = () => {
+  emit('logout')
+}
+
 </script>
 
 <template>
@@ -57,7 +63,12 @@ const toggleSidebar = () => {
         <svg class="w-7 h-7 flex-shrink-0 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
         </svg>
-        <span v-show="!isCollapsed" class="text-xl font-semibold whitespace-nowrap">Log out</span>
+        <span v-show="!isCollapsed"  
+        class="text-xl font-semibold whitespace-nowrap"
+        @click="triggerLogout"
+        >
+        Log out
+        </span>
       </div>
     </div>
   </aside>
