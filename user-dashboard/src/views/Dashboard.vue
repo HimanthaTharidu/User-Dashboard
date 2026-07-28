@@ -1,77 +1,76 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { fetchUsers } from '@/services/api';
-import type { User } from '@/types/user';
-import UserCard from '@/components/UserCard.vue';
-import UserModal from '@/components/UserModal.vue';
+import { fetchUserTodos, fetchUserPosts } from '@/services/api'
+import type { Todo } from '@/types/todos'
+import type { Post } from '@/types/posts'
 
-const search = ref("")
-const users = ref<User[]>([])
-const selectedUser = ref<User | null>(null)
-const showModal = ref(false)
 
-function openModal(user: User) {
-    selectedUser.value = user
-    showModal.value = true // Ensure explicit true for modal visibility
-}
+const props = defineProps<{ userId: number }>()
 
-function closeModal() {
-    showModal.value = false
-}
+const todos = ref<Todo[]>([])
+const posts = ref<Post[]>([])
 
 onMounted(async () => {
-    try {
-        const data = await fetchUsers()
-        users.value = data.users;
-    } catch (error) {
-        console.error("Logic Error: Failed to load directory", error)
-    } 
-});
+  try {
+    const [todosRes, postsRes] = await Promise.all([
+      fetchUserTodos(props.userId),
+      fetchUserPosts(props.userId)
+    ])
+    todos.value = todosRes.todos
+    posts.value = postsRes.posts
+  } catch (error) {
+    console.error("Failed to load user dashboard data", error)
+  }
+})
 
-const filteredUsers = computed(() => {
-    if (!search.value) return users.value
-
-    const term = search.value.toLowerCase()
-    return users.value.filter(u => 
-        u.firstName.toLowerCase().includes(term) ||
-        u.company?.department?.toLowerCase().includes(term)
-    )
-});
+// Computed stats for widgets
+const completedTasksCount = computed(() => todos.value.filter(t => t.completed).length)
+const pendingTasksCount = computed(() => todos.value.length - completedTasksCount.value)
 </script>
 
 <template>
-    <div class="max-w-7xl mx-auto p-6 pt-0">
-        <div class="bg-gray-100 py-6">
-            <h1 class="text-4xl font-black text-black mb-4">User Dashboard</h1>
-            
-            <div class="relative w-full max-w-md">
-                <span class="absolute inset-y-0 left-4 flex items-center text-gray-400">🔍</span>
-                <input 
-                    v-model="search"
-                    class="w-full pl-12 p-3 rounded-2xl bg-white border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                    placeholder="Search employees..."
-                />
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mt-4">
-            <UserCard
-                v-for="user in filteredUsers" 
-                :key="user.id"
-                :user="user"
-                @select="openModal"
-            />
-        </div>
-
-        <p v-if="filteredUsers.length === 0" class="text-gray-500 mt-10 text-center text-lg">
-            No users found matching "{{ search }}".
-        </p>
-
-        <UserModal
-            v-if="showModal"
-            :user="selectedUser"
-            :key="selectedUser?.id"
-            @close="closeModal"
-        />    
+  <div class="space-y-6">
+    <!-- Top Statistics Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <h3 class="text-gray-400 font-medium text-sm">Pending Tasks</h3>
+        <p class="text-3xl font-black text-black mt-2">{{ pendingTasksCount }}</p>
+      </div>
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <h3 class="text-gray-400 font-medium text-sm">Completed Tasks</h3>
+        <p class="text-3xl font-black text-green-600 mt-2">{{ completedTasksCount }}</p>
+      </div>
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <h3 class="text-gray-400 font-medium text-sm">Total Posts</h3>
+        <p class="text-3xl font-black text-blue-600 mt-2">{{ posts.length }}</p>
+      </div>
     </div>
+
+    <!-- Content Sections (Recent Posts & Tasks) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Todo Widget -->
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <h3 class="text-xl font-bold text-black mb-4">My Tasks</h3>
+        <div class="space-y-3 max-h-64 overflow-y-auto">
+          <div v-for="todo in todos.slice(0, 5)" :key="todo.id" class="flex items-center gap-3">
+            <input type="checkbox" :checked="todo.completed" class="w-4 h-4 text-blue-600 rounded" />
+            <span :class="todo.completed ? 'line-through text-gray-400' : 'text-gray-700'">
+              {{ todo.todo }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Posts Widget -->
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <h3 class="text-xl font-bold text-black mb-4">Recent Activity</h3>
+        <div class="space-y-4 max-h-64 overflow-y-auto">
+          <div v-for="post in posts.slice(0, 3)" :key="post.id" class="border-b border-gray-100 pb-3">
+            <h4 class="font-bold text-gray-800 text-sm">{{ post.title }}</h4>
+            <p class="text-gray-500 text-xs line-clamp-1 mt-1">{{ post.body }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
