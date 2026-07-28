@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const emit = defineEmits(['toggle', 'logout'])
-const isCollapsed = ref(false)
+defineProps<{ currentView: string }>()
 
+const emit = defineEmits(['toggle', 'logout', 'navigate'])
+const isCollapsed = ref(false)
 
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value
@@ -13,7 +14,6 @@ const toggleSidebar = () => {
 const triggerLogout = () => {
   emit('logout')
 }
-
 </script>
 
 <template>
@@ -23,6 +23,7 @@ const triggerLogout = () => {
       isCollapsed ? 'w-24' : 'w-70'
     ]"
   >
+    <!-- Toggle Button -->
     <button 
       @click="toggleSidebar"
       class="absolute -right-4 top-12 bg-[#6366f1] text-white p-1.5 rounded-lg border border-white/20 shadow-md z-50 hover:bg-white hover:text-[#6366f1] transition-all"
@@ -32,42 +33,60 @@ const triggerLogout = () => {
       </svg>
     </button>
 
+    <!-- Logo / Title -->
     <div class="pt-12 px-6 flex items-center justify-center gap-3 overflow-hidden">
-      <div class="w-10 h-10 rounded-full border-[10px] border-white flex-shrink-0 flex items-center justify-center">
-      </div>
+      <div class="w-10 h-10 rounded-full border-[10px] border-white flex-shrink-0 flex items-center justify-center"></div>
       <h1 v-show="!isCollapsed" class="text-3xl font-extrabold tracking-tight whitespace-nowrap">
         StaffHub
       </h1>
     </div>
 
+    <!-- Navigation Menu -->
     <nav class="mt-20 flex-grow px-4">
       <ul class="space-y-4">
-        <li class="flex items-center p-4 rounded-2xl bg-white/10 cursor-pointer group transition-all">
+        
+        <!-- Dashboard Item -->
+        <li 
+          @click="emit('navigate', 'dashboard')"
+          :class="[
+            'flex items-center p-4 rounded-2xl cursor-pointer group transition-all',
+            currentView === 'dashboard' ? 'bg-white/20 font-bold shadow-sm' : 'hover:bg-white/10'
+          ]"
+        >
           <svg class="w-7 h-7 flex-shrink-0 mr-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
-          <span v-show="!isCollapsed" class="text-xl font-semibold whitespace-nowrap">Dashboard</span>
+          <span v-show="!isCollapsed" class="text-xl whitespace-nowrap">Dashboard</span>
         </li>
 
-        <li class="flex items-center p-4 rounded-2xl hover:bg-white/5 text-indigo-100 hover:text-white cursor-pointer group transition-all">
+        <!-- Employees Directory Item -->
+        <li 
+          @click="emit('navigate', 'directory')"
+          :class="[
+            'flex items-center p-4 rounded-2xl cursor-pointer group transition-all',
+            currentView === 'directory' ? 'bg-white/20 font-bold shadow-sm' : 'hover:bg-white/10'
+          ]"
+        >
           <svg class="w-7 h-7 flex-shrink-0 mr-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
-          <span v-show="!isCollapsed" class="text-xl font-medium whitespace-nowrap">Employees</span>
+          <span v-show="!isCollapsed" class="text-xl whitespace-nowrap">Employees</span>
         </li>
+
       </ul>
     </nav>
 
+    <!-- Logout Section -->
     <div class="p-8 border-t border-white/10">
-      <div class="flex items-center justify-center gap-2 text-indigo-100 hover:text-white cursor-pointer transition-all group">
+      <div 
+        @click="triggerLogout"
+        class="flex items-center justify-center gap-2 text-indigo-100 hover:text-white cursor-pointer transition-all group"
+      >
         <svg class="w-7 h-7 flex-shrink-0 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
         </svg>
-        <span v-show="!isCollapsed"  
-        class="text-xl font-semibold whitespace-nowrap"
-        @click="triggerLogout"
-        >
-        Log out
+        <span v-show="!isCollapsed" class="text-xl font-semibold whitespace-nowrap">
+          Log out
         </span>
       </div>
     </div>
